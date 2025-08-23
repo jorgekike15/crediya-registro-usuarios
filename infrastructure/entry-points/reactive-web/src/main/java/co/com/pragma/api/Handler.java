@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class Handler {
     private static final Logger log = LoggerFactory.getLogger(Handler.class);
 
+    private static final String ERROR = "Error: ";
     private final UserUseCase userUseCase;
     private final UserDTOMapper userDTOMapper;
     private final Validator validator;
@@ -37,29 +38,29 @@ public class Handler {
                 .doOnError(e -> log.error("Error al crear usuario", e))
                 .onErrorResume(e -> {
                     if (e instanceof IllegalArgumentException) {
-                        return ServerResponse.status(409).bodyValue("Error: " + e.getMessage());
+                        return ServerResponse.status(409).bodyValue(ERROR + e.getMessage());
                     }
                     if (e instanceof ValidationException) {
                         return ServerResponse.status(400).bodyValue("Error de validación: " + e.getMessage());
                     }
-                    return ServerResponse.status(500).bodyValue("Error: " + e.getMessage());
+                    return ServerResponse.status(500).bodyValue(ERROR + e.getMessage());
                 })
                 .doFinally(signalType -> log.info("Fin de método listenGETCreateUser "));
     }
 
-    public Mono<ServerResponse> listenGETGetAllUsers(ServerRequest serverRequest) {
+    public Mono<ServerResponse> listenGETGetAllUsers() {
         log.info("Inicio de método: ");
         return ServerResponse.ok()
                 .body(userUseCase.findAllUsers().map(userDTOMapper::toResponse), UserDTO.class)
                 .doOnError(e -> log.error("Error al consultar todos los usuarios", e))
                 .onErrorResume(e -> {
                     if (e instanceof IllegalArgumentException) {
-                        return ServerResponse.status(409).bodyValue("Error: " + e.getMessage());
+                        return ServerResponse.status(409).bodyValue(ERROR + e.getMessage());
                     }
                     if (e instanceof ValidationException) {
                         return ServerResponse.status(400).bodyValue("Error de validación: " + e.getMessage());
                     }
-                    return ServerResponse.status(500).bodyValue("Error: " + e.getMessage());
+                    return ServerResponse.status(500).bodyValue(ERROR+ e.getMessage());
                 })
                 .doFinally(signalType -> log.info("Fin de método: listenGETGetAllUsers (señal: {})", signalType));
     }
