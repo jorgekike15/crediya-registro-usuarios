@@ -33,15 +33,8 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Mono<User> findUserByNumber(String id) {
-        return repository.findById(Integer.valueOf(id))
-                .map(entity -> mapper.map(entity, User.class));
-    }
-
-    @Override
-    public Mono<User> editUser(User user) {
-        return repository.save(mapper.map(user, UserEntity.class))
-                .map(e -> mapper.map(e, User.class));
+    public Mono<User> findByEmail(String email) {
+        return repository.findByEmail(email).map(entity -> mapper.map(entity, User.class));
     }
 
 }

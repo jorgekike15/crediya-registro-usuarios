@@ -12,22 +12,14 @@ public class UserUseCase {
     private final UserRepository userRepository;
 
     public Mono<User> saveUser(User user) {
-        return userRepository.saveUser(user);
+
+        return userRepository.findByEmail(user.getEmail())
+                .flatMap(existsUser -> Mono.<User>error(new IllegalArgumentException("El correo electrónico ya está en uso")))
+                .switchIfEmpty(Mono.defer(() -> userRepository.saveUser(user)));
     }
 
     public Flux<User> findAllUsers() {
         return userRepository.findAllUsers();
     }
 
-    public Mono<User> findUserByNumber(String id) {
-        return userRepository.findUserByNumber(id);
-    }
-
-    public Mono<User> editUser(User user) {
-        return userRepository.editUser(user);
-    }
-
-//    public Mono<void> deleteUser(String id) {
-//        userRepository.deleteUser(id);
-//    }
 }
