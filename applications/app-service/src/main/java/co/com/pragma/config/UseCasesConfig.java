@@ -1,8 +1,7 @@
 package co.com.pragma.config;
 
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
+import co.com.pragma.usecase.user.UserUseCase;
+import org.springframework.context.annotation.*;
 
 @Configuration
 @ComponentScan(basePackages = "co.com.pragma.usecase",
