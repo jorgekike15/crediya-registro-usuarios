@@ -15,7 +15,9 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         UserEntity,
         Integer,
         MyReactiveRepository
-        > implements UserRepository {
+        >
+        implements UserRepository
+{
 
     public MyReactiveRepositoryAdapter(MyReactiveRepository repository, ObjectMapper mapper) {
         super(repository, mapper, d -> mapper.map(d, User.class));

@@ -1,7 +1,8 @@
 package co.com.pragma.config;
 
-import co.com.pragma.usecase.user.UserUseCase;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 
 @Configuration
 @ComponentScan(basePackages = "co.com.pragma.usecase",
@@ -10,4 +11,5 @@ import org.springframework.context.annotation.*;
         },
         useDefaultFilters = false)
 public class UseCasesConfig {
+
 }

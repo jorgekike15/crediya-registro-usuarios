@@ -40,19 +40,19 @@ subprojects {
         implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
     }
 
-//    tasks.withType(Test).configureEach {
-//        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
-//            jvmArgs += [
-//                    "-XX:+AllowRedefinitionToAddDeleteMethods"
-//            ]
-//        }
-//    }
+    tasks.withType(Test).configureEach {
+        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
+            jvmArgs += [
+                    "-XX:+AllowRedefinitionToAddDeleteMethods"
+            ]
+        }
+    }
 
 //    test.finalizedBy(project.tasks.jacocoTestReport)
-
-
+//
+//
 //    jacocoTestReport {
-//        dependsOn test, 'pitest'
+//        dependsOn test
 //        reports {
 //            xml.setRequired true
 //            xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
@@ -67,19 +67,19 @@ subprojects {
 //    toolVersion = "${jacocoVersion}"
 //    reportsDirectory.set(layout.buildDirectory.dir("reports"))
 //}
-//
-//tasks.register('jacocoMergedReport', JacocoReport) {
-//    dependsOn = [test, subprojects.jacocoTestReport, pitestReportAggregate]
-//    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-//    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
-//    classDirectories.setFrom files(subprojects.sourceSets.main.output)
-//    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
-//    reports {
-//        xml.setRequired true
-//        csv.setRequired false
-//        html.setRequired true
-//    }
-//}
+
+tasks.register('jacocoMergedReport', JacocoReport) {
+    dependsOn = [test, subprojects.jacocoTestReport, pitestReportAggregate]
+    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
+    reports {
+        xml.setRequired true
+        csv.setRequired false
+        html.setRequired true
+    }
+}
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs = [
@@ -87,25 +87,25 @@ tasks.withType(JavaCompile).configureEach {
     ]
 }
 
-//pitestReportAggregate {
-//    doLast {
-//        def reportDir = layout.buildDirectory.dir("reports/pitest").get().asFile
-//        def consolidatedReport = new File(reportDir, 'mutations.xml')
-//        consolidatedReport.withWriter { writer ->
-//            writer.write("<mutations>\n")
-//            subprojects.each { subproject ->
-//                def xmlReport = subproject.layout.buildDirectory.file("reports/pitest/mutations.xml").get().asFile
-//                if (xmlReport.exists()) {
-//                    def xmlContent = xmlReport.text
-//                    xmlContent = xmlContent.replaceAll("<\\?xml[^>]*>", "")
-//                    xmlContent = xmlContent.replaceAll("</?mutations( partial=\"true\")?>", "")
-//                    writer.write(xmlContent.trim() + "\n")
-//                }
-//            }
-//            writer.write("</mutations>")
-//        }
-//    }
-//}
+tasks.register('pitestReportAggregate') {
+    doLast {
+        def reportDir = layout.buildDirectory.dir("reports/pitest").get().asFile
+        def consolidatedReport = new File(reportDir, 'mutations.xml')
+        consolidatedReport.withWriter { writer ->
+            writer.write("<mutations>\n")
+            subprojects.each { subproject ->
+                def xmlReport = subproject.layout.buildDirectory.file("reports/pitest/mutations.xml").get().asFile
+                if (xmlReport.exists()) {
+                    def xmlContent = xmlReport.text
+                    xmlContent = xmlContent.replaceAll("<\\?xml[^>]*>", "")
+                    xmlContent = xmlContent.replaceAll("</?mutations( partial=\"true\")?>", "")
+                    writer.write(xmlContent.trim() + "\n")
+                }
+            }
+            writer.write("</mutations>")
+        }
+    }
+}
 
 tasks.named('wrapper') {
     gradleVersion = '8.14.3'

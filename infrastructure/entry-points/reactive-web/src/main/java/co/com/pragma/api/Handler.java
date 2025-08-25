@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import org.springframework.transaction.reactive.TransactionalOperator;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,42 +28,42 @@ public class Handler {
     private final UserUseCase userUseCase;
     private final UserDTOMapper userDTOMapper;
     private final Validator validator;
+    private final TransactionalOperator transactionalOperator;
 
     public Mono<ServerResponse> listenGETCreateUser(ServerRequest serverRequest) {
-        log.info("Inicio de método: listenGETCreateUser ");
+        log.trace("Iniciando creación de usuario desde request");
         return serverRequest.bodyToMono(CreateUserDTO.class)
+                .doOnNext(request -> log.debug("Payload recibido: {}", request))
                 .flatMap(this::validacion)
-                .flatMap(dto -> userUseCase.saveUser(userDTOMapper.toModel(dto)))
+                .doOnNext(valid -> log.trace("Payload validado correctamente"))
+                .map(userDTOMapper::toModel)
+                .doOnNext(domain -> log.debug("Objeto de dominio generado: {}", domain))
+                .flatMap(user -> userUseCase.saveUser(user)
+                        )
                 .map(userDTOMapper::toResponse)
-                .flatMap(dto -> ServerResponse.ok().bodyValue(dto))
-                .doOnError(e -> log.error("Error al crear usuario", e))
-                .onErrorResume(e -> {
-                    if (e instanceof IllegalArgumentException) {
-                        return ServerResponse.status(409).bodyValue(ERROR + e.getMessage());
-                    }
-                    if (e instanceof ValidationException) {
-                        return ServerResponse.status(400).bodyValue("Error de validación: " + e.getMessage());
-                    }
-                    return ServerResponse.status(500).bodyValue(ERROR + e.getMessage());
+                .doOnSuccess(saved -> log.info("Usuario creado exitosamente: {}", saved))
+                .doOnError(error -> log.error("Error al crear usuario", error))
+                .flatMap(saved -> {
+                    log.trace("Construyendo respuesta HTTP 201 para usuario: {}", saved);
+                    return ServerResponse.status(org.springframework.http.HttpStatus.CREATED).bodyValue(saved);
                 })
-                .doFinally(signalType -> log.info("Fin de método listenGETCreateUser "));
+                .doFinally(signalType -> log.info("Fin de método listenGETCreateUser (señal: {})", signalType));
     }
 
-    public Mono<ServerResponse> listenGETGetAllUsers() {
-        log.info("Inicio de método: ");
-        return ServerResponse.ok()
-                .body(userUseCase.findAllUsers().map(userDTOMapper::toResponse), UserDTO.class)
-                .doOnError(e -> log.error("Error al consultar todos los usuarios", e))
-                .onErrorResume(e -> {
-                    if (e instanceof IllegalArgumentException) {
-                        return ServerResponse.status(409).bodyValue(ERROR + e.getMessage());
-                    }
-                    if (e instanceof ValidationException) {
-                        return ServerResponse.status(400).bodyValue("Error de validación: " + e.getMessage());
-                    }
-                    return ServerResponse.status(500).bodyValue(ERROR+ e.getMessage());
+    public Mono<ServerResponse> listenGETGetAllUsers(ServerRequest serverRequest) {
+        log.trace("Iniciando consulta de todos los usuarios");
+
+        return userUseCase.findAllUsers()
+                .map(userDTOMapper::toResponse)
+                .collectList()
+                .doOnNext(users -> log.debug("Usuarios recuperados: {}", users.size()))
+                .flatMap(users -> {
+                    log.trace("Construyendo respuesta HTTP 200 para usuarios");
+                    return ServerResponse.ok().bodyValue(users);
                 })
-                .doFinally(signalType -> log.info("Fin de método: listenGETGetAllUsers (señal: {})", signalType));
+                .doOnSuccess(response -> log.info("Consulta de usuarios completada exitosamente"))
+                .doOnError(error -> log.error("Error al consultar todos los usuarios", error))
+                .doFinally(signalType -> log.info("Fin de método listenGETGetAllUsers (señal: {})", signalType));
     }
 
     private Mono<CreateUserDTO> validacion(CreateUserDTO request) {
