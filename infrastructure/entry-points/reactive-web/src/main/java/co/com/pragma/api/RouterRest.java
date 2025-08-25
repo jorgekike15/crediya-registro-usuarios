@@ -92,6 +92,7 @@ public class RouterRest {
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(POST("/api/v1/usuarios"), handler::listenGETCreateUser)
-                .andRoute(GET("/api/v1/usuarios/all"), handler::listenGETGetAllUsers);
+                .andRoute(GET("/api/v1/usuarios/all"), handler::listenGETGetAllUsers)
+                .andRoute(GET("/api/v1/usuarios/exist"), handler::listenGETValidateByDocument);
     }
 }

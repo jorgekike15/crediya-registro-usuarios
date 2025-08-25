@@ -1,7 +1,6 @@
 package co.com.pragma.api;
 
 import co.com.pragma.api.config.dto.CreateUserDTO;
-import co.com.pragma.api.config.dto.UserDTO;
 import co.com.pragma.api.config.dto.mapper.UserDTOMapper;
 import co.com.pragma.usecase.user.UserUseCase;
 import jakarta.validation.ConstraintViolation;
@@ -11,10 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
-import org.springframework.transaction.reactive.TransactionalOperator;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -39,7 +38,7 @@ public class Handler {
                 .map(userDTOMapper::toModel)
                 .doOnNext(domain -> log.debug("Objeto de dominio generado: {}", domain))
                 .flatMap(user -> userUseCase.saveUser(user)
-                        )
+                )
                 .map(userDTOMapper::toResponse)
                 .doOnSuccess(saved -> log.info("Usuario creado exitosamente: {}", saved))
                 .doOnError(error -> log.error("Error al crear usuario", error))
@@ -64,6 +63,19 @@ public class Handler {
                 .doOnSuccess(response -> log.info("Consulta de usuarios completada exitosamente"))
                 .doOnError(error -> log.error("Error al consultar todos los usuarios", error))
                 .doFinally(signalType -> log.info("Fin de método listenGETGetAllUsers (señal: {})", signalType));
+    }
+
+    public Mono<ServerResponse> listenGETValidateByDocument(ServerRequest serverRequest) {
+        return Mono.justOrEmpty(serverRequest.queryParam("document"))
+                .filter(document -> !document.isBlank())
+                .flatMap(document -> userUseCase.existsByDocumentoIdentificacion(document)
+                        .hasElement()
+                        .flatMap(exists -> ServerResponse.ok().bodyValue(exists))
+                )
+                .switchIfEmpty(ServerResponse.badRequest().bodyValue("El parámetro 'document' es obligatorio"))
+                .doOnSuccess(response -> log.info("Consulta de usuario completada exitosamente"))
+                .doOnError(error -> log.error("Error al consultar usuario por idenficación", error))
+                .doFinally(signalType -> log.info("Fin de método listenGETValidateByDocument (señal: {})", signalType));
     }
 
     private Mono<CreateUserDTO> validacion(CreateUserDTO request) {

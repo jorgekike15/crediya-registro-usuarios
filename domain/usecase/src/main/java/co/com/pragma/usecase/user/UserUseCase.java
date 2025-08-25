@@ -22,4 +22,8 @@ public class UserUseCase {
         return userRepository.findAllUsers();
     }
 
+    public Mono<User> existsByDocumentoIdentificacion(String documentoIdentificacion){
+        return userRepository.findByDocumentoIdentificacion(documentoIdentificacion);
+    }
+
 }
