@@ -20,9 +20,9 @@ subprojects {
     }
 
 
-//    test {
-//        useJUnitPlatform()
-//    }
+    test {
+        useJUnitPlatform()
+    }
 
     dependencies {
         implementation 'io.projectreactor:reactor-core'
@@ -48,25 +48,25 @@ subprojects {
         }
     }
 
-//    test.finalizedBy(project.tasks.jacocoTestReport)
-//
-//
-//    jacocoTestReport {
-//        dependsOn test
-//        reports {
-//            xml.setRequired true
-//            xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
-//            csv.setRequired false
-//            html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
-//        }
-//    }
+    test.finalizedBy(project.tasks.jacocoTestReport)
+
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.setRequired true
+            xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
+            csv.setRequired false
+            html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
+        }
+    }
 
 }
 
-//jacoco {
-//    toolVersion = "${jacocoVersion}"
-//    reportsDirectory.set(layout.buildDirectory.dir("reports"))
-//}
+jacoco {
+    toolVersion = "${jacocoVersion}"
+    reportsDirectory.set(layout.buildDirectory.dir("reports"))
+}
 
 tasks.register('jacocoMergedReport', JacocoReport) {
     dependsOn = [test, subprojects.jacocoTestReport, pitestReportAggregate]

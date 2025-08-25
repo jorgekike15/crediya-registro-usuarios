@@ -38,6 +38,7 @@ public class Handler {
                 .map(userDTOMapper::toModel)
                 .doOnNext(domain -> log.debug("Objeto de dominio generado: {}", domain))
                 .flatMap(user -> userUseCase.saveUser(user)
+                        .as(transactionalOperator::transactional)
                 )
                 .map(userDTOMapper::toResponse)
                 .doOnSuccess(saved -> log.info("Usuario creado exitosamente: {}", saved))
