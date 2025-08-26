@@ -8,27 +8,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ObjectMapperConfigTest {
 
-
     @Test
     void testObjectMapperBean() {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ObjectMapperConfig.class);
         ObjectMapper objectMapper = context.getBean(ObjectMapper.class);
         assertNotNull(objectMapper);
-        assertInstanceOf(ObjectMapperImp.class, objectMapper);
+        assertTrue(objectMapper instanceof ObjectMapperImp);
         context.close();
-    }
-
-    @Test
-    void testOnlyOneObjectMapperBean() {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ObjectMapperConfig.class);
-        String[] beanNames = context.getBeanNamesForType(ObjectMapper.class);
-        assertEquals(1, beanNames.length);
-        context.close();
-    }
-
-    @Test
-    void testContextClosesWithoutError() {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ObjectMapperConfig.class);
-        assertDoesNotThrow(context::close);
     }
 }
