@@ -5,15 +5,14 @@ import co.com.pragma.api.config.dto.LoginDTO;
 import co.com.pragma.api.config.dto.mapper.UserDTOMapper;
 import co.com.pragma.api.config.exception.InvalidCredentialsException;
 import co.com.pragma.api.config.security.JwtUtil;
-import co.com.pragma.usecase.user.UserUseCase;
+import co.com.pragma.usecase.autentication.in.AutenticationUseCasePort;
+import co.com.pragma.usecase.user.in.UserUseCasePort;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -30,7 +29,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class Handler {
     private static final Logger log = LoggerFactory.getLogger(Handler.class);
-    private final UserUseCase userUseCase;
+    private final AutenticationUseCasePort autenticationUseCasePort;
+    private final UserUseCasePort userUseCasePort;
     private final UserDTOMapper userDTOMapper;
     private final Validator validator;
     private final TransactionalOperator transactionalOperator;
@@ -49,7 +49,7 @@ public class Handler {
                 .map(userDTOMapper::toModel)
                 .doOnNext(domain -> log.debug(MessageFormat.format(bundle.getString("log.domain.generated"),
                         domain)))
-                .flatMap(user -> userUseCase.saveUser(user)
+                .flatMap(user -> userUseCasePort.saveUser(user)
                         .as(transactionalOperator::transactional)
                 )
                 .map(userDTOMapper::toResponse)
@@ -70,7 +70,7 @@ public class Handler {
         if (log.isTraceEnabled()) {
             log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenGETGetAllUsers"));
         }
-        return userUseCase.findAllUsers()
+        return userUseCasePort.findAllUsers()
                 .map(userDTOMapper::toResponse)
                 .collectList()
                 .doOnNext(users -> log.debug(MessageFormat.format(
@@ -89,11 +89,12 @@ public class Handler {
 
     public Mono<ServerResponse> listenGETValidateByDocument(ServerRequest serverRequest) {
         if (log.isTraceEnabled()) {
-            log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenGETValidateByDocument"));
+            log.trace(MessageFormat.format(bundle.getString("log.method.start"),
+                    "listenGETValidateByDocument"));
         }
         return Mono.justOrEmpty(serverRequest.queryParam("document"))
                 .filter(document -> !document.isBlank())
-                .flatMap(document -> userUseCase.existsByDocumentoIdentificacion(document)
+                .flatMap(document -> userUseCasePort.existsByDocumentoIdentificacion(document)
                         .hasElement()
                         .flatMap(exists -> ServerResponse.ok().bodyValue(exists))
                 )
@@ -109,7 +110,7 @@ public class Handler {
     public Mono<ServerResponse> listenPOSTLogin(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(LoginDTO.class)
                 .map(userDTOMapper::toModelLogin)
-                .flatMap(loginRequest -> userUseCase.validatePassword(loginRequest.getEmail(), loginRequest.getPassword())
+                .flatMap(loginRequest -> autenticationUseCasePort.login(loginRequest.getEmail(), loginRequest.getPassword())
                         .switchIfEmpty(Mono.error(new InvalidCredentialsException("Credenciales inválidas")))
                         .flatMap(user -> {
                             String token = jwtUtil.generateToken(user);

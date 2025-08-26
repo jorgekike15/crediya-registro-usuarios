@@ -12,7 +12,7 @@ import java.util.Date;
 public class JwtUtil {
     private final String secretKey;
 
-    public JwtUtil(@Value("${SECRET_KET}") String secretKey) {
+    public JwtUtil(@Value("${spring.security.oauth2.resourceserver.jwt.secret}") String secretKey) {
         this.secretKey = secretKey;
     }
 
@@ -31,14 +31,6 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
-    }
-
-    public Integer extractRol(String token) {
-        return Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody()
-                .get("role", Integer.class);
     }
 
 }
