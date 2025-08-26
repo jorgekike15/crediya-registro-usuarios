@@ -31,10 +31,10 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
             String email = jwtUtil.extractUsername(token);
             return userUseCasePort.findByEmail(email)
                     .flatMap(user -> rolUseCasePort.consultRol(user.getIdRol())
-                            .map(rol -> new UsernamePasswordAuthenticationToken(
-                                    email,
-                                    null,
-                                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + rol.getNombre()))
+                            .map(rol ->
+                                    new UsernamePasswordAuthenticationToken(email, null,
+                                    Collections.singletonList(
+                                            new SimpleGrantedAuthority("ROLE_" + rol.getNombre()))
                             ))
                     );
         } catch (Exception e) {

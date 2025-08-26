@@ -26,9 +26,7 @@ public class SecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/api/v1/login").permitAll()
                         .pathMatchers("/**").hasAuthority("ROLE_ADMIN")
-//                        .pathMatchers("/user/**").hasAuthority("ROLE_2")
-//                        .pathMatchers("/user/**").hasAuthority("ROLE_3")
-                        .anyExchange().authenticated()
+                        .pathMatchers("/api/v1/usuarios/all").authenticated()
                 )
                 .addFilterAt(jwtFilter, SecurityWebFiltersOrder.AUTHENTICATION);
 
