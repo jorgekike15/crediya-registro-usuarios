@@ -16,11 +16,11 @@ public class JwtUtil {
         this.secretKey = secretKey;
     }
 
-    public String generateToken(User user) {
+    public String generateToken(String user, String rol) {
         return Jwts.builder()
-                .setSubject(user.getEmail())
+                .setSubject(user)
                 .setIssuedAt(new Date())
-                .claim("role", user.getIdRol())
+                .claim("role", rol)
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
@@ -31,6 +31,14 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    public String extractRol(String token) {
+        return Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
     }
 
 }

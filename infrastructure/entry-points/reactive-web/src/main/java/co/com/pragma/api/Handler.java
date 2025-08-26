@@ -5,7 +5,9 @@ import co.com.pragma.api.config.dto.LoginDTO;
 import co.com.pragma.api.config.dto.mapper.UserDTOMapper;
 import co.com.pragma.api.config.exception.InvalidCredentialsException;
 import co.com.pragma.api.config.security.JwtUtil;
+import co.com.pragma.model.rol.Rol;
 import co.com.pragma.usecase.autentication.in.AutenticationUseCasePort;
+import co.com.pragma.usecase.rol.in.RolUseCasePort;
 import co.com.pragma.usecase.user.in.UserUseCasePort;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ValidationException;
@@ -36,6 +38,7 @@ public class Handler {
     private final TransactionalOperator transactionalOperator;
     private final JwtUtil jwtUtil;
     private ResourceBundle bundle = ResourceBundle.getBundle("log4j2");
+    private final RolUseCasePort rolUseCasePort;
 
     public Mono<ServerResponse> listenGETCreateUser(ServerRequest serverRequest) {
         if (log.isTraceEnabled()) {
@@ -110,12 +113,18 @@ public class Handler {
     public Mono<ServerResponse> listenPOSTLogin(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(LoginDTO.class)
                 .map(userDTOMapper::toModelLogin)
-                .flatMap(loginRequest -> autenticationUseCasePort.login(loginRequest.getEmail(), loginRequest.getPassword())
-                        .switchIfEmpty(Mono.error(new InvalidCredentialsException("Credenciales inválidas")))
-                        .flatMap(user -> {
-                            String token = jwtUtil.generateToken(user);
-                            return ServerResponse.ok().bodyValue(Map.of("token", token));
-                        })
+                .flatMap(loginRequest -> autenticationUseCasePort.login(loginRequest.getEmail(),
+                                loginRequest.getPassword())
+                        .switchIfEmpty(Mono.error(
+                                new InvalidCredentialsException("Credenciales inválidas")))
+                        .flatMap(user -> rolUseCasePort.consultRol(user.getIdRol())
+                                .map(rol -> {
+                                    String token = jwtUtil.generateToken(user.getEmail(),
+                                            rol.getNombre());
+                                    return Map.of("token", token);
+                                })
+                                .flatMap(tokenMap -> ServerResponse.ok().bodyValue(tokenMap))
+                        )
                 )
                 .doOnError(error -> log.error("Error en login", error));
     }

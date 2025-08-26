@@ -1,6 +1,5 @@
 package co.com.pragma.api.config.security;
 
-import co.com.pragma.usecase.rol.in.RolUseCasePort;
 import co.com.pragma.usecase.user.UserUseCase;
 import co.com.pragma.usecase.user.in.UserUseCasePort;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -16,12 +15,10 @@ import java.util.Collections;
 public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
     private final JwtUtil jwtUtil;
     private final UserUseCasePort userUseCasePort;
-    private final RolUseCasePort rolUseCasePort;
 
-    public JwtAuthenticationManager(JwtUtil jwtUtil, UserUseCase userUseCasePort, RolUseCasePort rolUseCasePort) {
+    public JwtAuthenticationManager(JwtUtil jwtUtil, UserUseCase userUseCasePort) {
         this.jwtUtil = jwtUtil;
         this.userUseCasePort = userUseCasePort;
-        this.rolUseCasePort = rolUseCasePort;
     }
 
     @Override
@@ -29,14 +26,17 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
         String token = authentication.getCredentials().toString();
         try {
             String email = jwtUtil.extractUsername(token);
+            String role = jwtUtil.extractRol(token);
             return userUseCasePort.findByEmail(email)
-                    .flatMap(user -> rolUseCasePort.consultRol(user.getIdRol())
-                            .map(rol ->
-                                    new UsernamePasswordAuthenticationToken(email, null,
+                    .flatMap(user -> Mono.just(
+                            new UsernamePasswordAuthenticationToken(
+                                    email,
+                                    null,
                                     Collections.singletonList(
-                                            new SimpleGrantedAuthority("ROLE_" + rol.getNombre()))
-                            ))
-                    );
+                                            new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())
+                                    )
+                            )
+                    ));
         } catch (Exception e) {
             return Mono.empty();
         }
