@@ -7,6 +7,7 @@ public record CreateUserDTO(
         @NotBlank(message = "El apellido es obligatorio") String apellido,
         @NotBlank(message = "El correo electrónico es obligatorio")
         @Email(message = "El correo electrónico no es válido") String email,
+        @Pattern(regexp = "\\d+", message = "El documento de identificación solo debe contener números")
         String documentoIdentificacion,
         String telefono,
         @NotNull(message = "El salario base es obligatorio")
