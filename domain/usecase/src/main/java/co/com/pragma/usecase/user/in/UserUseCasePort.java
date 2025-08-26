@@ -12,4 +12,6 @@ public interface UserUseCasePort {
 
     Mono<User> existsByDocumentoIdentificacion(String documentoIdentificacion);
 
+    Mono<User> findByEmail(String email);
+
 }

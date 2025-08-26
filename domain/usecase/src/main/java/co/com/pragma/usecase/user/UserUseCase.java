@@ -38,4 +38,8 @@ public class UserUseCase implements UserUseCasePort {
                 });
     }
 
+    public Mono<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
 }
