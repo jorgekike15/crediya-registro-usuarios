@@ -1,4 +1,5 @@
 package co.com.pragma.model.user;
+
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,5 +21,6 @@ public class User {
     private String telefono;
     private int idRol;
     private double salarioBase;
+    private String password;
 
 }

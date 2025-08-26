@@ -7,29 +7,35 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ResourceBundle;
-
 @RequiredArgsConstructor
 public class UserUseCase implements UserUseCasePort {
 
     private final UserRepository userRepository;
 
-    @Override
     public Mono<User> saveUser(User user) {
+
         return userRepository.findByEmail(user.getEmail())
-                .flatMap(existsUser -> Mono.<User>error(
-                        new IllegalArgumentException("El correo electrónico ya está en uso")))
+                .flatMap(existsUser -> Mono.<User>error(new IllegalArgumentException("El correo electrónico ya está en uso")))
                 .switchIfEmpty(Mono.defer(() -> userRepository.saveUser(user)));
     }
 
-    @Override
     public Flux<User> findAllUsers() {
         return userRepository.findAllUsers();
     }
 
-    @Override
-    public Mono<User> existsByDocumentoIdentificacion(String documentoIdentificacion){
+    public Mono<User> existsByDocumentoIdentificacion(String documentoIdentificacion) {
         return userRepository.findByDocumentoIdentificacion(documentoIdentificacion);
+    }
+
+    public Mono<User> validatePassword(String email, String password) {
+        return userRepository.findByEmail(email)
+                .switchIfEmpty(Mono.empty())
+                .flatMap(user -> {
+                    if (user.getPassword() != null && user.getPassword().equals(password)) {
+                        return Mono.just(user);
+                    }
+                    return Mono.empty();
+                });
     }
 
 }

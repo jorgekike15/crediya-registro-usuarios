@@ -28,6 +28,16 @@ public class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.badRequest().body(response));
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public Mono<ResponseEntity<Map<String, Object>>> handleInvalidCredentials(InvalidCredentialsException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", HttpStatus.OK.value());
+        response.put("error", "Credenciales inválidas");
+        response.put("message", ex.getMessage());
+        response.put("timestamp", LocalDateTime.now());
+        return Mono.just(ResponseEntity.ok(response));
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         Throwable rootCause = ex.getCause();

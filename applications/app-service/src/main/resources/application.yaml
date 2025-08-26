@@ -1,3 +1,4 @@
+SECRET_KET: "tuclavesecretatuclavesecretatuclavesecretatuclavesecretatuclavesecretatuclavesecreta"
 server:
   port: 9001
 

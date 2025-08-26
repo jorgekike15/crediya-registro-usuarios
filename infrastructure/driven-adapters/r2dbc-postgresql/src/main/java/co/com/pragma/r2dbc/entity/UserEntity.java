@@ -18,4 +18,5 @@ public class UserEntity {
     private String telefono;
     private int idRol;
     private double salarioBase;
+    private String password;
 }
