@@ -20,7 +20,9 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.text.MessageFormat;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,72 +30,67 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class Handler {
     private static final Logger log = LoggerFactory.getLogger(Handler.class);
-
     private final UserUseCase userUseCase;
     private final UserDTOMapper userDTOMapper;
     private final Validator validator;
     private final TransactionalOperator transactionalOperator;
     private final JwtUtil jwtUtil;
+    private ResourceBundle bundle = ResourceBundle.getBundle("log4j2");
 
     public Mono<ServerResponse> listenGETCreateUser(ServerRequest serverRequest) {
-        log.trace("Iniciando creación de usuario desde request");
+        if (log.isTraceEnabled()) {
+            log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenGETCreateUser"));
+        }
         return serverRequest.bodyToMono(CreateUserDTO.class)
-                .doOnNext(request -> log.debug("Payload recibido: {}", request))
+                .doOnNext(request -> log.debug(MessageFormat.format(bundle
+                        .getString("log.payload.received"), request)))
                 .flatMap(this::validacion)
-                .doOnNext(valid -> log.trace("Payload validado correctamente"))
+                .doOnNext(valid -> log.trace(bundle.getString("log.payload.validated")))
                 .map(userDTOMapper::toModel)
-                .doOnNext(domain -> log.debug("Objeto de dominio generado: {}", domain))
+                .doOnNext(domain -> log.debug(MessageFormat.format(bundle.getString("log.domain.generated"),
+                        domain)))
                 .flatMap(user -> userUseCase.saveUser(user)
                         .as(transactionalOperator::transactional)
                 )
                 .map(userDTOMapper::toResponse)
-                .doOnSuccess(saved -> log.info("Usuario creado exitosamente: {}", saved))
-                .doOnError(error -> log.error("Error al crear usuario", error))
+                .doOnSuccess(saved -> log.info(MessageFormat.format(bundle.getString("log.user.created"),
+                        saved)))
+                .doOnError(error -> log.error(bundle.getString("log.user.create.error"), error))
                 .flatMap(saved -> {
-                    log.trace("Construyendo respuesta HTTP 201 para usuario: {}", saved);
+                    log.trace(MessageFormat.format(bundle.getString("log.user.http201"), saved));
                     return ServerResponse.status(org.springframework.http.HttpStatus.CREATED).bodyValue(saved);
                 })
-                .doFinally(signalType -> log.info("Fin de método listenGETCreateUser (señal: {})", signalType));
+                .doFinally(signalType -> log.info(
+                        MessageFormat.format(bundle.getString("log.method.end"),
+                                "listenGETCreateUser", signalType)
+                ));
     }
 
     public Mono<ServerResponse> listenGETGetAllUsers(ServerRequest serverRequest) {
-        log.trace("Iniciando consulta de todos los usuarios");
-
-        return ReactiveSecurityContextHolder.getContext()
-                .map(ctx -> ctx.getAuthentication())
-                .flatMap(auth -> {
-                    if (auth == null || !auth.isAuthenticated()) {
-                        return ServerResponse.status(401).bodyValue("No autenticado");
-                    }
-                    String token = auth.getCredentials().toString();
-                    Integer rol = jwtUtil.extractRol(token);
-                    // Cambia el valor 1 por el id de rol que debe tener acceso
-                    if (rol == null || rol != 1) {
-                        return ServerResponse.status(403).bodyValue("No autorizado");
-                    }
-                    return userUseCase.findAllUsers()
-                            .map(userDTOMapper::toResponse)
-                            .collectList()
-                            .doOnSuccess(response -> log.info("Consulta de usuarios completada exitosamente"))
-                            .flatMap(users -> ServerResponse.ok().bodyValue(users));
+        if (log.isTraceEnabled()) {
+            log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenGETGetAllUsers"));
+        }
+        return userUseCase.findAllUsers()
+                .map(userDTOMapper::toResponse)
+                .collectList()
+                .doOnNext(users -> log.debug(MessageFormat.format(
+                        bundle.getString("log.users.retrieved"), users.size())))
+                .flatMap(users -> {
+                    log.trace(bundle.getString("log.users.http200"));
+                    return ServerResponse.ok().bodyValue(users);
                 })
-                .doOnError(error -> log.error("Error al consultar todos los usuarios", error))
-                .doFinally(signalType -> log.info("Fin de método listenGETGetAllUsers (señal: {})", signalType));
-
-//        return userUseCase.findAllUsers()
-//                .map(userDTOMapper::toResponse)
-//                .collectList()
-//                .doOnNext(users -> log.debug("Usuarios recuperados: {}", users.size()))
-//                .flatMap(users -> {
-//                    log.trace("Construyendo respuesta HTTP 200 para usuarios");
-//                    return ServerResponse.ok().bodyValue(users);
-//                })
-//                .doOnSuccess(response -> log.info("Consulta de usuarios completada exitosamente"))
-//                .doOnError(error -> log.error("Error al consultar todos los usuarios", error))
-//                .doFinally(signalType -> log.info("Fin de método listenGETGetAllUsers (señal: {})", signalType));
+                .doOnSuccess(response -> log.info(bundle.getString("log.users.query.success")))
+                .doOnError(error -> log.error(bundle.getString("log.users.query.error"), error))
+                .doFinally(signalType -> log.info(
+                        MessageFormat.format(bundle.getString("log.method.end"),
+                                "listenGETGetAllUsers", signalType)
+                ));
     }
 
     public Mono<ServerResponse> listenGETValidateByDocument(ServerRequest serverRequest) {
+        if (log.isTraceEnabled()) {
+            log.trace(MessageFormat.format(bundle.getString("log.method.start"), "listenGETValidateByDocument"));
+        }
         return Mono.justOrEmpty(serverRequest.queryParam("document"))
                 .filter(document -> !document.isBlank())
                 .flatMap(document -> userUseCase.existsByDocumentoIdentificacion(document)
@@ -101,9 +98,12 @@ public class Handler {
                         .flatMap(exists -> ServerResponse.ok().bodyValue(exists))
                 )
                 .switchIfEmpty(ServerResponse.badRequest().bodyValue("El parámetro 'document' es obligatorio"))
-                .doOnSuccess(response -> log.info("Consulta de usuario completada exitosamente"))
-                .doOnError(error -> log.error("Error al consultar usuario por idenficación", error))
-                .doFinally(signalType -> log.info("Fin de método listenGETValidateByDocument (señal: {})", signalType));
+                .doOnSuccess(response ->     log.info(bundle.getString("log.users.query.success")))
+                .doOnError(error -> log.error(bundle.getString("log.user.query.byid.error"), error))
+                .doFinally(signalType -> log.info(
+                        MessageFormat.format(bundle.getString("log.method.end"),
+                                "listenGETValidateByDocument", signalType)
+                ));
     }
 
     public Mono<ServerResponse> listenPOSTLogin(ServerRequest serverRequest) {

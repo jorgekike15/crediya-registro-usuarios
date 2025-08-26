@@ -20,6 +20,10 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
         try {
             String username = jwtUtil.extractUsername(token);
             Integer rol = jwtUtil.extractRol(token);
+<<<<<<< Updated upstream
+=======
+            System.out.println("Rol del usuario: " + rol);
+>>>>>>> Stashed changes
             return Mono.just(new UsernamePasswordAuthenticationToken(username, null, null));
         } catch (Exception e) {
             return Mono.empty();
