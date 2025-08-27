@@ -27,6 +27,7 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/login").permitAll()
                         .pathMatchers("/api/v1/usuarios/all").authenticated()
                         .pathMatchers("/api/v1/usuarios").hasAuthority("ROLE_USR")
+                        .pathMatchers("/api/v1/usuarios/exist").hasAuthority("ROLE_USR")
                         .pathMatchers("/**").hasAuthority("ROLE_ADMIN")
                         .anyExchange().authenticated()
                 )

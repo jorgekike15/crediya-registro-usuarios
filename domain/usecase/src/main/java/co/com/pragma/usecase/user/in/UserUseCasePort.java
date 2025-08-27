@@ -1,6 +1,7 @@
 package co.com.pragma.usecase.user.in;
 
 import co.com.pragma.model.user.User;
+import co.com.pragma.model.user.UserDocumentValidationResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -10,7 +11,7 @@ public interface UserUseCasePort {
 
     Flux<User> findAllUsers();
 
-    Mono<User> existsByDocumentoIdentificacion(String documentoIdentificacion);
+    Mono<UserDocumentValidationResponse> existsByDocumentoIdentificacion(String documentoIdentificacion, String emailUserLogin);
 
     Mono<User> findByEmail(String email);
 

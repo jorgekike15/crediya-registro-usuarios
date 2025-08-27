@@ -18,8 +18,8 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ValidationException.class)
-    public Mono<ResponseEntity<Map<String, Object>>> handleValidationException(ValidationException ex) {
+    @ExceptionHandler(jakarta.validation.ValidationException.class)
+    public Mono<ResponseEntity<Map<String, Object>>> handleValidationException(jakarta.validation.ValidationException ex) {
         Map<String, Object> response = new HashMap<>();
         response.put("status", HttpStatus.BAD_REQUEST.value());
         response.put("error", "Validación fallida");

@@ -97,12 +97,15 @@ public class Handler {
         }
         return Mono.justOrEmpty(serverRequest.queryParam("document"))
                 .filter(document -> !document.isBlank())
-                .flatMap(document -> userUseCasePort.existsByDocumentoIdentificacion(document)
-                        .hasElement()
-                        .flatMap(exists -> ServerResponse.ok().bodyValue(exists))
-                )
+                .flatMap(document -> {
+                    String authHeader = serverRequest.headers().firstHeader("Authorization");
+                    assert authHeader != null;
+                    String username = jwtUtil.extractUsername(authHeader.substring(7));
+                    return userUseCasePort.existsByDocumentoIdentificacion(document, username)
+                            .flatMap(exists -> ServerResponse.ok().bodyValue(exists));
+                })
                 .switchIfEmpty(ServerResponse.badRequest().bodyValue("El parámetro 'document' es obligatorio"))
-                .doOnSuccess(response ->     log.info(bundle.getString("log.users.query.success")))
+                .doOnSuccess(response -> log.info(bundle.getString("log.users.query.success")))
                 .doOnError(error -> log.error(bundle.getString("log.user.query.byid.error"), error))
                 .doFinally(signalType -> log.info(
                         MessageFormat.format(bundle.getString("log.method.end"),
