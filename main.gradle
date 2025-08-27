@@ -20,9 +20,9 @@ subprojects {
     }
 
 
-//    test {
-//        useJUnitPlatform()
-//    }
+    test {
+        useJUnitPlatform()
+    }
 
     dependencies {
         implementation 'io.projectreactor:reactor-core'
@@ -40,26 +40,34 @@ subprojects {
         implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
     }
 
-//    tasks.withType(Test).configureEach {
-//        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
-//            jvmArgs += [
-//                    "-XX:+AllowRedefinitionToAddDeleteMethods"
-//            ]
-//        }
-//    }
-//
-//    test.finalizedBy(project.tasks.jacocoTestReport)
-//
-//
-//    jacocoTestReport {
-//        dependsOn test
-//        reports {
-//            xml.setRequired true
-//            xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
-//            csv.setRequired false
-//            html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
-//        }
-//    }
+    tasks.withType(Test).configureEach {
+        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
+            jvmArgs += [
+                    "-XX:+AllowRedefinitionToAddDeleteMethods"
+            ]
+        }
+    }
+
+    test.finalizedBy(project.tasks.jacocoTestReport)
+
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.setRequired true
+            xml.setOutputLocation layout.buildDirectory.file("reports/jacoco.xml")
+            csv.setRequired false
+            html.setOutputLocation layout.buildDirectory.dir("reports/jacocoHtml")
+        }
+        afterEvaluate {
+            classDirectories.setFrom(
+                    files(classDirectories.files.collect { fileTree(dir: it, exclude: [
+                            '**/co/com/pragma/api/config/exception/**',
+                            '**/security/**'
+                    ]) })
+            )
+        }
+    }
 
 }
 

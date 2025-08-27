@@ -13,7 +13,6 @@ import lombok.Setter;
 @Builder(toBuilder = true)
 public class User {
 
-    private String id;
     private String nombre;
     private String apellido;
     private String email;

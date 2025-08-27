@@ -2,6 +2,8 @@ package co.com.pragma.config;
 
 import co.com.pragma.model.rol.gateways.RolRepository;
 import co.com.pragma.model.user.gateways.UserRepository;
+import co.com.pragma.usecase.autentication.AutenticationUseCase;
+import co.com.pragma.usecase.autentication.in.AutenticationUseCasePort;
 import co.com.pragma.usecase.rol.RolUseCase;
 import co.com.pragma.usecase.rol.in.RolUseCasePort;
 import co.com.pragma.usecase.user.UserUseCase;
@@ -34,6 +36,12 @@ public class UseCasesConfig {
     @Primary
     public RolUseCasePort rolUseCasePort(){
         return new RolUseCase(rolRepository);
+    }
+
+    @Bean
+    @Primary
+    public AutenticationUseCasePort autenticationUseCasePort(){
+        return new AutenticationUseCase(userRepository);
     }
 
 }

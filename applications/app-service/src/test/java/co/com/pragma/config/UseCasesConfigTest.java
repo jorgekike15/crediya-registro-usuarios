@@ -1,5 +1,6 @@
 package co.com.pragma.config;
 
+import co.com.pragma.model.rol.gateways.RolRepository;
 import co.com.pragma.model.user.gateways.UserRepository;
 import co.com.pragma.usecase.user.UserUseCase;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,11 @@ public class UseCasesConfigTest {
         @Bean
         public UserRepository solicitanteRepository() {
             return mock(UserRepository.class);
+        }
+
+        @Bean
+        public RolRepository rolRepository() {
+            return mock(RolRepository.class);
         }
 
         @Bean
