@@ -9,6 +9,8 @@ public record CreateUserDTO(
         @Email(message = "El correo electrónico no es válido") String email,
         @Pattern(regexp = "\\d+", message = "El documento de identificación solo debe contener números")
         String documentoIdentificacion,
+        @NotNull(message = "El telefono base es obligatorio")
+        @Pattern(regexp = "\\d+", message = "El documento de identificación solo debe contener números")
         String telefono,
         @NotNull(message = "El salario base es obligatorio")
         @Min(value = 0, message = "El salario base no puede ser menor que 0")
