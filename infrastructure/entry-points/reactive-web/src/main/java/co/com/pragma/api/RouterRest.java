@@ -94,6 +94,7 @@ public class RouterRest {
         return route(POST("/api/v1/usuarios"), handler::listenGETCreateUser)
                 .andRoute(GET("/api/v1/usuarios/all"), handler::listenGETGetAllUsers)
                 .andRoute(GET("/api/v1/usuarios/exist"), handler::listenGETValidateByDocument)
-                .andRoute(POST("/api/v1/login"), handler::listenPOSTLogin);
+                .andRoute(POST("/api/v1/login"), handler::listenPOSTLogin)
+                .andRoute(GET("/api/v1/usuarios"), handler::listenGETGetUserByDocument);
     }
 }

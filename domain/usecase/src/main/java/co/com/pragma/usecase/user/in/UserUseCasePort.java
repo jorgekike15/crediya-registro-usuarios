@@ -15,4 +15,6 @@ public interface UserUseCasePort {
 
     Mono<User> findByEmail(String email);
 
+    Mono<User> findByDocument(String document);
+
 }

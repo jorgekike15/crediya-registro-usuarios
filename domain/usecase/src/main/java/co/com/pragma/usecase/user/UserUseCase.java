@@ -42,4 +42,9 @@ public class UserUseCase implements UserUseCasePort {
         return userRepository.findByEmail(email);
     }
 
+    @Override
+    public Mono<User> findByDocument(String document) {
+        return userRepository.findByDocumentoIdentificacion(document);
+    }
+
 }

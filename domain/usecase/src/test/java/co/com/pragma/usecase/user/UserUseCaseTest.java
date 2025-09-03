@@ -161,4 +161,23 @@ class UserUseCaseTest {
                 )
                 .verifyComplete();
     }
+
+    @Test
+    void testFindByDocument_UserExists() {
+        User user = new User();
+        user.setDocumentoIdentificacion("441");
+        when(userRepository.findByDocumentoIdentificacion("441")).thenReturn(Mono.just(user));
+
+        StepVerifier.create(useCase.findByDocument("441"))
+                .expectNext(user)
+                .verifyComplete();
+    }
+
+    @Test
+    void testFindByDocument_UserNotExists() {
+        when(userRepository.findByDocumentoIdentificacion("441")).thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.findByDocument("441"))
+                .verifyComplete();
+    }
 }

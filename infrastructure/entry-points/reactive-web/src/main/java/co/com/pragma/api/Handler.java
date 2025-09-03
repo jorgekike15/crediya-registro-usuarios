@@ -114,6 +114,10 @@ public class Handler {
     }
 
     public Mono<ServerResponse> listenPOSTLogin(ServerRequest serverRequest) {
+        if (log.isTraceEnabled()) {
+            log.trace(MessageFormat.format(bundle.getString("log.method.start"),
+                    "listenPOSTLogin"));
+        }
         return serverRequest.bodyToMono(LoginDTO.class)
                 .map(userDTOMapper::toModelLogin)
                 .flatMap(loginRequest -> autenticationUseCasePort.login(loginRequest.getEmail(),
@@ -129,8 +133,26 @@ public class Handler {
                                 .flatMap(tokenMap -> ServerResponse.ok().bodyValue(tokenMap))
                         )
                 )
-                .doOnError(error -> log.error("Error en login", error));
+                .doOnError(error -> log.error("Error en listenPOSTLogin", error));
     }
+
+    Mono<ServerResponse> listenGETGetUserByDocument(ServerRequest serverRequest) {
+        if (log.isTraceEnabled()) {
+            log.trace(MessageFormat.format(bundle.getString("log.method.start"),
+                    "listenGETGetUserByDocument"));
+        }
+        return Mono.justOrEmpty(serverRequest.queryParam("document"))
+                .flatMap(document -> {
+                    log.trace("Documento recibido: %d", document);
+                    return userUseCasePort.findByDocument(document)
+                            .map(userDTOMapper::toResponse)
+                            .flatMap(userResponse -> ServerResponse.ok().bodyValue(userResponse))
+                            .switchIfEmpty(ServerResponse.notFound().build());
+                })
+                .switchIfEmpty(ServerResponse.badRequest().bodyValue("El parámetro 'document' es obligatorio"))
+                .doOnError(error -> log.error("Error en listenGETGetUserByDocument", error));
+    }
+
 
     private Mono<CreateUserDTO> validacion(CreateUserDTO request) {
         Set<ConstraintViolation<CreateUserDTO>> violaciones = validator.validate(request);
